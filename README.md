@@ -9,10 +9,10 @@ GGService is a Go package designed for building robust and gracefully shutdown s
 
 ## Installation
 
-To use GgService in your Go project, simply run:
+To use GGService in your Go project, simply run:
 
 ```bash
-go get github.com/your-username/ggservice
+go get github.com/lmbek/ggservice
 ```
 
 ## Example code (How to use)
@@ -21,26 +21,24 @@ go get github.com/your-username/ggservice
 package main
 
 import (
+	"errors"
 	"fmt"
+	"github.com/lmbek/ggservice"
 	"log"
 	"time"
-
-	"github.com/your-username/ggservice"
 )
 
 func main() {
-	fmt.Println("Starting GgService example...")
+	loadService()
+}
 
-	// Create a new GgService instance
+func loadService() {
+	//alternative //s := new_ssg.NewService("SSG Service", 5*time.Second)
 	service := ggservice.New(&ggservice.Service{Name: "My Service", GracefulShutdownTime: 5 * time.Second})
-
-  // Start the service
-	err := service.Start(start, run, forcedStop)
+	err := service.Start(start, run, forcedTimeoutStop)
 	if err != nil {
-		log.Fatal("Failed to start service:", err)
+		log.Fatal(err)
 	}
-
-  // you can also start this in a Goroutine and use service.Stop() and service.ForceShutdown() to stop the service internally
 }
 
 // start runs when the service starts
@@ -64,11 +62,10 @@ func run() error {
 }
 
 // forcedStop is being run when the application is trying to force a shutdown (non-gracefully)
-func forcedStop(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
+func forcedTimeoutStop() {
+	log.Fatal(errors.New("forced stop: timeout"))
 }
+
 ```
 
 ## Contributors

@@ -9,9 +9,9 @@ import (
 )
 
 func ExampleNewService() {
-	service := ggservice.NewService("My Service", 5*time.Second)
+	service := ggservice.NewService("My Service", 5*time.Second, nil)
 
-	ExampleStart := func() error {
+	ExampleStart := func(args ...any) error {
 		fmt.Println("this runs when service starts")
 		return nil
 	}
@@ -33,9 +33,9 @@ func ExampleNewService() {
 }
 
 func ExampleNew() {
-	service := ggservice.New(&ggservice.Service{Name: "My Service", GracefulShutdownTime: 5 * time.Second})
+	service := ggservice.New(&ggservice.Service{Name: "My Service", GracefulShutdownTime: 5 * time.Second, Args: nil})
 
-	ExampleStart := func() error {
+	ExampleStart := func(args ...any) error {
 		fmt.Println("this runs when service starts")
 		return nil
 	}

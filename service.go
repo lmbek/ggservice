@@ -11,7 +11,7 @@ import (
 
 // IService defines the interface for managing a service with start, stop, and force shutdown capabilities.
 type IService interface {
-	Start(startFunc func(...any) error, runFunc func(...any) error, forceExitFunc func(...any) error) error
+	Start(startFunc func(args ...any) error, runFunc func() error, forceExitFunc func() error) error
 	Stop()
 	ForceShutdown()
 }
@@ -20,7 +20,8 @@ type IService interface {
 type Service struct {
 	Name                 string        // Name of the service
 	GracefulShutdownTime time.Duration // Timeout duration for graceful shutdown
-	isRunning            bool          // Flag indicating whether the service is running
+	Args                 []any
+	isRunning            bool // Flag indicating whether the service is running
 }
 
 // New creates a new instance of Service with the given name and graceful shutdown timeout.
@@ -28,33 +29,39 @@ func New(service *Service) IService {
 	return &Service{
 		Name:                 service.Name,
 		GracefulShutdownTime: service.GracefulShutdownTime,
+		Args:                 service.Args,
 		isRunning:            true,
 	}
 }
 
 // NewService creates a new instance of Service with the given name and graceful shutdown timeout.
-func NewService(name string, gracefulShutdownTime time.Duration) IService {
+func NewService(name string, gracefulShutdownTime time.Duration, args ...any) IService {
 	return New(&Service{
 		Name:                 name,
+		Args:                 args,
 		GracefulShutdownTime: gracefulShutdownTime,
 	})
 }
 
 // Start starts the service with custom start, run, and stop functions.
-func (s *Service) Start(startFunc func(...any) error, runFunc func(...any) error, forceExitFunc func(...any) error) error {
+func (s *Service) Start(startFunc func(args ...any) error, runFunc func() error, forceExitFunc func() error) error {
 	go s.listenForInterrupt(forceExitFunc) // Listen for interrupt signals
 
 	// Execute custom start function if provided
 	fmt.Printf("Starting service: %s\n", s.Name)
-	if startFunc != nil {
-		err := startFunc()
+	if startFunc == nil {
+		// do nothing
+	} else {
+		err := startFunc(s.Args...)
 		if err != nil {
 			return err
 		}
 	}
 
 	// Execute custom run function in a loop as long as the service is running
-	if runFunc != nil {
+	if runFunc == nil {
+		// do nothing
+	} else {
 		for s.isRunning {
 			err := runFunc()
 			if err != nil {
@@ -79,7 +86,7 @@ func (s *Service) ForceShutdown() {
 }
 
 // listenForInterrupt listens for interrupt signals and triggers shutdown.
-func (s *Service) listenForInterrupt(forceExit func(...any) error) {
+func (s *Service) listenForInterrupt(forceExit func() error) {
 	osSignal := make(chan os.Signal, 1)
 	signal.Notify(osSignal, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	<-osSignal // Block until a signal is received
@@ -94,11 +101,11 @@ func (s *Service) listenForInterrupt(forceExit func(...any) error) {
 		<-time.After(s.GracefulShutdownTime)
 
 		// Execute custom ForceExit func
-		if forceExit != nil {
-			_ = forceExit() // ignoring error in interrupt functionality (the error is meant for manual use only)
-		} else {
+		if forceExit == nil {
 			// if forceExitFunc is not implemented by the user, then run ForceShutdown (exits program with log)
 			s.ForceShutdown()
+		} else {
+			_ = forceExit() // ignoring error in interrupt functionality (the error is meant for manual use only)
 		}
 	}()
 }

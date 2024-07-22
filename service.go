@@ -11,7 +11,7 @@ import (
 
 // IService defines the interface for managing a service with start, stop, and force shutdown capabilities.
 type IService interface {
-	Start(startFunc func() error, runFunc func() error, forcedTimeoutStopFunc func()) error
+	Start(startFunc func() error, runFunc func() error, forceExitFunc func()) error
 	Stop()
 	ForceShutdown()
 }
@@ -41,22 +41,23 @@ func NewService(name string, gracefulShutdownTime time.Duration) IService {
 }
 
 // Start starts the service with custom start, run, and stop functions.
-func (s *Service) Start(startFunc func() error, runFunc func() error, forcedTimeoutStopFunc func()) error {
-	go s.listenForInterrupt(forcedTimeoutStopFunc) // Listen for interrupt signals
-
-	fmt.Printf("Starting service: %s\n", s.Name)
+func (s *Service) Start(startFunc func() error, runFunc func() error, forceExitFunc func()) error {
+	go s.listenForInterrupt(forceExitFunc) // Listen for interrupt signals
 
 	// Execute custom start function if provided
+	fmt.Printf("Starting service: %s\n", s.Name)
 	if startFunc != nil {
-		if err := startFunc(); err != nil {
+		err := startFunc()
+		if err != nil {
 			return err
 		}
 	}
 
-	// Execute run function in a loop as long as the service is running
+	// Execute custom run function in a loop as long as the service is running
 	if runFunc != nil {
 		for s.isRunning {
-			if err := runFunc(); err != nil {
+			err := runFunc()
+			if err != nil {
 				return err
 			}
 		}
@@ -71,14 +72,14 @@ func (s *Service) Stop() {
 	s.isRunning = false
 }
 
-// ForceShutdown forcefully stops the service and logs a fatal error.
+// ForceShutdown forcefully stops the service and logs a fatal error. (note: forcing shutdown is not graceful)
 func (s *Service) ForceShutdown() {
 	s.Stop()
 	log.Fatal("Forced shutdown")
 }
 
 // listenForInterrupt listens for interrupt signals and triggers shutdown.
-func (s *Service) listenForInterrupt(stop func()) {
+func (s *Service) listenForInterrupt(forceExit func()) {
 	osSignal := make(chan os.Signal, 1)
 	signal.Notify(osSignal, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	<-osSignal // Block until a signal is received
@@ -91,8 +92,13 @@ func (s *Service) listenForInterrupt(stop func()) {
 	// Schedule a forced shutdown if the graceful shutdown time elapses
 	go func() {
 		<-time.After(s.GracefulShutdownTime)
-		if stop != nil {
-			stop()
+
+		// Execute custom ForceExit func
+		if forceExit != nil {
+			forceExit()
+		} else {
+			// if forceExitFunc is not implemented by the user, then run ForceShutdown (exits program with log)
+			s.ForceShutdown()
 		}
 	}()
 }

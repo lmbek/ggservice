@@ -2,7 +2,7 @@ package ggservice_test
 
 import (
 	"fmt"
-	"ggservice"
+	"github.com/lmbek/ggservice"
 	"log"
 	"testing"
 	"time"
@@ -21,11 +21,12 @@ func ExampleNewService() {
 		return nil
 	}
 
-	ExampleForcedTimeoutStop := func() {
-		fmt.Println("this runs when service starts")
+	ExampleForceExit := func() error {
+		fmt.Println("this runs when service forceExits")
+		return nil
 	}
 
-	err := service.Start(ExampleStart, ExampleRun, ExampleForcedTimeoutStop)
+	err := service.Start(ExampleStart, ExampleRun, ExampleForceExit)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -44,11 +45,12 @@ func ExampleNew() {
 		return nil
 	}
 
-	ExampleForcedTimeoutStop := func() {
-		fmt.Println("this runs when service starts")
+	ExampeForceExit := func() error {
+		fmt.Println("this runs when service forceExits")
+		return nil
 	}
 
-	err := service.Start(ExampleStart, ExampleRun, ExampleForcedTimeoutStop)
+	err := service.Start(ExampleStart, ExampleRun, ExampeForceExit)
 	if err != nil {
 		log.Fatal(err)
 	}

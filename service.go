@@ -20,6 +20,7 @@ type IService interface {
 type Service struct {
 	Name                 string        // Name of the service
 	GracefulShutdownTime time.Duration // Timeout duration for graceful shutdown
+	PrintLog             bool
 	Args                 []any
 	isRunning            bool // Flag indicating whether the service is running
 }
@@ -29,17 +30,20 @@ func New(service *Service) IService {
 	return &Service{
 		Name:                 service.Name,
 		GracefulShutdownTime: service.GracefulShutdownTime,
+		PrintLog:             service.PrintLog,
 		Args:                 service.Args,
 		isRunning:            true,
 	}
 }
 
 // NewService creates a new instance of Service with the given name and graceful shutdown timeout.
-func NewService(name string, gracefulShutdownTime time.Duration, args ...any) IService {
+func NewService(name string, gracefulShutdownTime time.Duration, printLog bool, args ...any) IService {
 	return New(&Service{
 		Name:                 name,
-		Args:                 args,
+		PrintLog:             printLog,
 		GracefulShutdownTime: gracefulShutdownTime,
+		Args:                 args,
+		isRunning:            true,
 	})
 }
 
@@ -48,7 +52,10 @@ func (s *Service) Start(startFunc func(args ...any) error, runFunc func() error,
 	go s.listenForInterrupt(forceExitFunc) // Listen for interrupt signals
 
 	// Execute custom start function if provided
-	fmt.Printf("Starting service: %s\n", s.Name)
+	if s.PrintLog {
+		fmt.Printf("Starting service: %s\n", s.Name)
+	}
+
 	if startFunc == nil {
 		// do nothing
 	} else {
@@ -68,7 +75,10 @@ func (s *Service) Start(startFunc func(args ...any) error, runFunc func() error,
 				return err
 			}
 		}
-		fmt.Printf("%s stopped gracefully\n", s.Name)
+
+		if s.PrintLog {
+			fmt.Printf("%s stopped gracefully\n", s.Name)
+		}
 	}
 
 	return nil
@@ -82,7 +92,10 @@ func (s *Service) Stop() {
 // ForceShutdown forcefully stops the service and logs a fatal error. (note: forcing shutdown is not graceful)
 func (s *Service) ForceShutdown() {
 	s.Stop()
-	log.Fatal("Forced shutdown")
+
+	// printing forced shutdown warning regardless of s.PrintLog
+	log.Println("Forced shutdown")
+	os.Exit(1)
 }
 
 // listenForInterrupt listens for interrupt signals and triggers shutdown.
@@ -90,6 +103,7 @@ func (s *Service) listenForInterrupt(forceExit func() error) {
 	osSignal := make(chan os.Signal, 1)
 	signal.Notify(osSignal, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	<-osSignal // Block until a signal is received
+	// printing interrupt signal warning regardless of s.PrintLog
 	fmt.Printf("%s received interrupt signal, initiating graceful shutdown (timeout: %v)\n", s.Name, s.GracefulShutdownTime)
 	signal.Stop(osSignal)
 	close(osSignal)

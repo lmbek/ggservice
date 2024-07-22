@@ -9,7 +9,7 @@ import (
 )
 
 func ExampleNewService() {
-	service := ggservice.NewService("My Service", 5*time.Second, nil)
+	service := ggservice.NewService("My Service", 5*time.Second, true, nil)
 
 	ExampleStart := func(args ...any) error {
 		fmt.Println("this runs when service starts")

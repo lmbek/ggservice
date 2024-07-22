@@ -17,7 +17,7 @@ func main() {
 // loadService - creates a new service and starts it
 func loadService() {
 	// creating new service with name and graceful shutdown time duration
-	service := ggservice.NewService("SSG Service", 5*time.Second, "starting", "function")
+	service := ggservice.NewService("SSG Service", 5*time.Second, true, "starting", "function")
 
 	// starting the service (please note you can choose to not implement any of these by using nil instead)
 	waitgroup := &sync.WaitGroup{}

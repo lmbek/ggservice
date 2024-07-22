@@ -85,7 +85,7 @@ Lars M Bek (https://github.com/lmbek)
 
 
 ## License
-[`ggservice`][repos_url] is free and open-source software licensed under the [MIT License][repo_license_url], created and supported by [Lars M Bek]. 
+[`ggservice`][repos_url] is free and open-source software licensed under the MIT License, created and supported by [Lars M Bek]. 
 
 
 <!-- Go links -->
@@ -94,6 +94,3 @@ Lars M Bek (https://github.com/lmbek)
 [go_dev_url]: https://pkg.go.dev/github.com/lmbek/ggservice
 [go_report_img]: https://goreportcard.com/badge/github.com/lmbek/ggservice
 [go_report_url]: https://goreportcard.com/report/github.com/lmbek/ggservice
-[repo_license_img]: https://goreportcard.com/badge/github.com/lmbek/ggservice
-[repo_license_url]: https://goreportcard.com/report/github.com/lmbek/ggservice
-

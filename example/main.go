@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/lmbek/ggservice"
 	"log"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -16,7 +17,7 @@ func main() {
 // loadService - creates a new service and starts it
 func loadService() {
 	// creating new service with name and graceful shutdown time duration
-	service := ggservice.NewService("SSG Service", 5*time.Second, "arg1", "arg2")
+	service := ggservice.NewService("SSG Service", 5*time.Second, "starting", "function")
 
 	// starting the service (please note you can choose to not implement any of these by using nil instead)
 	waitgroup := &sync.WaitGroup{}
@@ -36,9 +37,17 @@ func loadService() {
 	waitgroup.Wait() // this is a blocking call
 }
 
-// start runs when the service starts
+// start runs when the service starts (note: handling arguments is only needed if arguments are passed along)
 func start(args ...any) error {
-	fmt.Println("starting function")
+	argsNeeded := 2
+	if len(args) < argsNeeded {
+		return errors.New("Need at least " + strconv.Itoa(argsNeeded) + " args when creating new service")
+	}
+	return startWithArgs(args[0].(string), args[1].(string))
+}
+
+func startWithArgs(arg1 string, arg2 string) error {
+	fmt.Println(arg1, arg2)
 	return nil
 }
 

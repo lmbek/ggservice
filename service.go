@@ -11,7 +11,7 @@ import (
 
 // IService defines the interface for managing a service with start, stop, and force shutdown capabilities.
 type IService interface {
-	Start(startFunc func() error, runFunc func() error, forceExitFunc func() error) error
+	Start(startFunc func(...any) error, runFunc func(...any) error, forceExitFunc func(...any) error) error
 	Stop()
 	ForceShutdown()
 }
@@ -41,7 +41,7 @@ func NewService(name string, gracefulShutdownTime time.Duration) IService {
 }
 
 // Start starts the service with custom start, run, and stop functions.
-func (s *Service) Start(startFunc func() error, runFunc func() error, forceExitFunc func() error) error {
+func (s *Service) Start(startFunc func(...any) error, runFunc func(...any) error, forceExitFunc func(...any) error) error {
 	go s.listenForInterrupt(forceExitFunc) // Listen for interrupt signals
 
 	// Execute custom start function if provided
@@ -79,7 +79,7 @@ func (s *Service) ForceShutdown() {
 }
 
 // listenForInterrupt listens for interrupt signals and triggers shutdown.
-func (s *Service) listenForInterrupt(forceExit func() error) {
+func (s *Service) listenForInterrupt(forceExit func(...any) error) {
 	osSignal := make(chan os.Signal, 1)
 	signal.Notify(osSignal, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	<-osSignal // Block until a signal is received

@@ -28,6 +28,7 @@ import (
 	"fmt"
 	"github.com/lmbek/ggservice"
 	"log"
+	"sync"
 	"time"
 )
 
@@ -35,27 +36,27 @@ func main() {
 	loadService()
 }
 
+// loadService - creates a new service and starts it
 func loadService() {
 	// creating new service with name and graceful shutdown time duration
 	service := ggservice.NewService("SSG Service", 5*time.Second)
 
-	// we can use Start, Stop and ForceShutdown on the service
-
-	// since Start is a blocking operation we would want to put Start, Stop or ForceShutdown into a goroutine
-	// if we want to stop the service ourselves, otherwise we would also just wait for interrupt
+	// starting the service (please note you can choose to not implement any of these by using nil instead)
+	waitgroup := &sync.WaitGroup{}
+	waitgroup.Add(1)
 	go func() {
-		time.Sleep(1 * time.Second)
-		// we can also use service.Stop or service.ForceShutdown, but notice service.Start is a blocking call
-		// we can put service.Start in a go routine and use waitgroups etc... your choice.
-		//service.Stop()          // waits till all operations are done (not waiting for graceful timer)
-		//service.ForceShutdown() // force shutdown immediately
+		err := service.Start(start, run, forceExit) // this is a blocking call
+		if err != nil {
+			log.Fatal(err)
+		}
+		waitgroup.Done()
 	}()
 
-	// starting the service (please note you can choose to not implement any of these by using nil instead)
-	err := service.Start(start, run, forceExit) // this is a blocking call
-	if err != nil {
-		log.Fatal(err)
-	}
+	// if we wish to stop the service, we can do so before the wait function
+	//service.Stop()
+	//service.ForceShutdown()
+
+	waitgroup.Wait() // this is a blocking call
 }
 
 // start runs when the service starts
@@ -76,8 +77,6 @@ func run() error {
 func forceExit() {
 	log.Fatalln(errors.New("forced stop: timeout"))
 }
-
-
 ```
 
 ## Contributors

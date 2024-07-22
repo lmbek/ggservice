@@ -16,7 +16,7 @@ func main() {
 // loadService - creates a new service and starts it
 func loadService() {
 	// creating new service with name and graceful shutdown time duration
-	service := ggservice.NewService("SSG Service", 5*time.Second)
+	service := ggservice.NewService("SSG Service", 5*time.Second, "arg1", "arg2")
 
 	// starting the service (please note you can choose to not implement any of these by using nil instead)
 	waitgroup := &sync.WaitGroup{}
@@ -37,7 +37,7 @@ func loadService() {
 }
 
 // start runs when the service starts
-func start() error {
+func start(args ...any) error {
 	fmt.Println("starting function")
 	return nil
 }
@@ -51,6 +51,7 @@ func run() error {
 }
 
 // forceExit is being run when the application is trying to force a shutdown (non-gracefully)
-func forceExit() {
+func forceExit() error {
 	log.Fatalln(errors.New("forced stop: timeout"))
+	return nil
 }

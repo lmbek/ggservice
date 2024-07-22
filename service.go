@@ -11,7 +11,7 @@ import (
 
 // IService defines the interface for managing a service with start, stop, and force shutdown capabilities.
 type IService interface {
-	Start(startFunc func() error, runFunc func() error, forceExitFunc func()) error
+	Start(startFunc func() error, runFunc func() error, forceExitFunc func() error) error
 	Stop()
 	ForceShutdown()
 }
@@ -41,7 +41,7 @@ func NewService(name string, gracefulShutdownTime time.Duration) IService {
 }
 
 // Start starts the service with custom start, run, and stop functions.
-func (s *Service) Start(startFunc func() error, runFunc func() error, forceExitFunc func()) error {
+func (s *Service) Start(startFunc func() error, runFunc func() error, forceExitFunc func() error) error {
 	go s.listenForInterrupt(forceExitFunc) // Listen for interrupt signals
 
 	// Execute custom start function if provided
@@ -79,7 +79,7 @@ func (s *Service) ForceShutdown() {
 }
 
 // listenForInterrupt listens for interrupt signals and triggers shutdown.
-func (s *Service) listenForInterrupt(forceExit func()) {
+func (s *Service) listenForInterrupt(forceExit func() error) {
 	osSignal := make(chan os.Signal, 1)
 	signal.Notify(osSignal, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	<-osSignal // Block until a signal is received
@@ -95,7 +95,7 @@ func (s *Service) listenForInterrupt(forceExit func()) {
 
 		// Execute custom ForceExit func
 		if forceExit != nil {
-			forceExit()
+			_ = forceExit() // ignoring error in interrupt functionality (the error is meant for manual use only)
 		} else {
 			// if forceExitFunc is not implemented by the user, then run ForceShutdown (exits program with log)
 			s.ForceShutdown()

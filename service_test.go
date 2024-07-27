@@ -70,7 +70,10 @@ func ExampleNew() {
 }
 
 func TestNew(t *testing.T) {
-	t.Errorf("test not implemented yet")
+	service := ggservice.New(&ggservice.Service{Name: "My Service"})
+	if service == nil {
+		t.Fatal("expected non-nil service")
+	}
 }
 
 func TestNewService(t *testing.T) {

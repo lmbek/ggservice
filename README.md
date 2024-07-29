@@ -1,17 +1,18 @@
 # Graceful Go Service (GGService)
 GGService is a Go package designed for building robust and gracefully shutdown services. It provides a framework to easily manage service lifecycle, handle interrupts, and ensure smooth operations even during shutdowns. Ideal for applications requiring reliable service management. Contains graceful shutdowns and custom functions.
 
+ggservice version 1.5.1 <br>
 go version 1.22+ <br>
+current test coverage: 63.4% <br>
 [![Go report][go_report_img]][go_report_url]
 
 ## Features
-
 - **Graceful Shutdowns:** GgService allows services to handle interrupts and shutdowns gracefully, ensuring minimal disruption.
 - **Customizable:** Easily integrate with your Go applications by providing custom start and run functions.
 - **Simple API:** Straightforward API for starting, stopping, and managing service lifecycles.
+- **Application Lifecycle** You can start, restart, stop or force shutdowns. Multiple services can run simultaneous, but be aware that the lowest default timeout of a force shutdown will force shutdown the whole application.
 
 ## Installation
-
 To use GGService in your Go project, simply run:
 
 ```bash
@@ -19,7 +20,11 @@ go get github.com/lmbek/ggservice
 ```
 
 ## Example code (How to use)
+GGService can be used like this:
 
+1) Create main.go file
+2) Create go.mod file with your chosen module name and go version 
+3) Insert the code into main.go
 ```bash
 package main
 
@@ -88,26 +93,19 @@ func forceShutdown() error {
 	os.Exit(-1)
 	return nil
 }
-
-// run loops from the application is started until it is stopped, terminated or ForceShutdown (please use with time.Sleep in between frames)
-func run2() error {
-	log.Println("start of work2")
-	time.Sleep(894 * time.Millisecond) // note: if the graceful timer duration is below amount of work needed to be done, it will forceExit
-	log.Println("end of work2")
-	return nil
-}
-
-// run loops from the application is started until it is stopped, terminated or ForceShutdown (please use with time.Sleep in between frames)
-func run3() error {
-	log.Println("work3 (with custom loop time.Sleep)")
-	return nil
-}
-
-
+```
+4) run go mod tidy or go get github.com/lmbek/ggservice to import ggservice
+```bash
+   go mod tidy
+```
+5) run the command
+```bash
+    go run .
 ```
 
 ## Contributors
 Lars M Bek (https://github.com/lmbek)
+Ida Marcher Jensen (https://github.com/notHooman996)
 
 
 ## License

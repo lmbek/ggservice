@@ -11,6 +11,186 @@ import (
 	"time"
 )
 
+// TESTS:
+
+var startFunc = func() error {
+	fmt.Println("started service...")
+	return nil
+}
+
+var runFunc = func() error {
+	fmt.Println("running service...")
+	time.Sleep(1 * time.Second)
+	return nil
+}
+
+var stopFunc = func() error {
+	fmt.Println("stopped service...")
+	time.Sleep(1 * time.Second)
+	return nil
+}
+
+func TestNew(test *testing.T) {
+	service := ggservice.New(&ggservice.Service{Name: "My Service"})
+	if service == nil {
+		test.Error("Could not create new service")
+	}
+}
+
+func TestNewService(t *testing.T) {
+	service := ggservice.NewService("My Service")
+	if service == nil {
+		t.Error("Could not create new service")
+	}
+}
+
+func TestService_StartStop(t *testing.T) {
+	t.Run("Without custom functions", func(t *testing.T) {
+		service := ggservice.NewService("My Service")
+		err := service.Start(nil, nil, nil, nil)
+		if err != nil {
+			t.Error(err)
+		}
+	})
+	t.Run("With start function", func(t *testing.T) {
+		service := ggservice.NewService("My Service")
+
+		err := service.Start(startFunc, nil, nil, nil)
+		if err != nil {
+			t.Error(err)
+		}
+	})
+	t.Run("With stop function", func(t *testing.T) {
+		service := ggservice.NewService("My Service")
+
+		err := service.Start(nil, nil, stopFunc, nil)
+		if err != nil {
+			t.Error(err)
+		}
+	})
+	// waitgroup dependent below:
+	t.Run("With custom functions", func(t *testing.T) {
+		waitgroup := sync.WaitGroup{}
+		waitgroup.Add(2)
+		var service ggservice.IService
+
+		go func() {
+			defer waitgroup.Done()
+			service = ggservice.NewService("My Service")
+			err := service.Start(nil, runFunc, nil, nil)
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+		go func() {
+			defer waitgroup.Done()
+			time.Sleep(3 * time.Second)
+			err := service.Stop()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+		waitgroup.Wait()
+	})
+	t.Run("With full custom functions", func(t *testing.T) {
+		waitgroup := sync.WaitGroup{}
+		waitgroup.Add(2)
+		var service2 ggservice.IService
+
+		forceShutdownFunc := func() error {
+			fmt.Println("stopped service...")
+			time.Sleep(1 * time.Second)
+			return nil
+		}
+
+		go func() {
+			defer waitgroup.Done()
+			service2 = ggservice.NewService("My Service")
+			err := service2.Start(startFunc, runFunc, stopFunc, forceShutdownFunc)
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
+		go func() {
+			defer waitgroup.Done()
+			time.Sleep(3 * time.Second)
+			err := service2.Stop()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+		waitgroup.Wait()
+	})
+}
+
+func TestService_Restart(t *testing.T) {
+	service := ggservice.NewService("My Service")
+
+	testFunc := func() {
+		waitgroup := sync.WaitGroup{}
+
+		go func() {
+			waitgroup.Add(1)
+			defer waitgroup.Done()
+			time.Sleep(3 * time.Second)
+			err := service.Restart() // this is a blocking call
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+		go func() {
+			waitgroup.Add(1)
+			defer waitgroup.Done()
+			time.Sleep(6 * time.Second)
+			err := service.Stop()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+		err := service.Start(nil, runFunc, nil, nil) // this is a blocking call
+		waitgroup.Wait()
+		if err != nil {
+			t.Error(err)
+		}
+	}
+
+	t.Run("with_logLevel_default", func(t *testing.T) {
+		testFunc()
+	})
+
+	t.Run("with_logLevel_all", func(t *testing.T) {
+		service.SetLogLevel(ggservice.LOG_LEVEL_ALL)
+		testFunc()
+	})
+
+	t.Run("with_logLevel_warn", func(t *testing.T) {
+		service.SetLogLevel(ggservice.LOG_LEVEL_WARN)
+		testFunc()
+	})
+
+	t.Run("with_logLevel_error", func(t *testing.T) {
+		service.SetLogLevel(ggservice.LOG_LEVEL_ERROR)
+		testFunc()
+	})
+
+	t.Run("with_logLevel_none", func(t *testing.T) {
+		service.SetLogLevel(ggservice.LOG_LEVEL_NONE)
+		testFunc()
+	})
+
+}
+
+func TestService_ForceShutdown(t *testing.T) {
+	t.Errorf("test not implemented yet")
+}
+
+func TestService_listenForInterrupt(t *testing.T) {
+	t.Errorf("test not implemented yet")
+}
+
+// EXAMPLES:
+
 func ExampleNewService() {
 	service := ggservice.NewService("My Service")
 
@@ -67,30 +247,6 @@ func ExampleNew() {
 	if err != nil {
 		log.Fatal(err)
 	}
-}
-
-func TestNew(t *testing.T) {
-	t.Errorf("test not implemented yet")
-}
-
-func TestNewService(t *testing.T) {
-	t.Errorf("test not implemented yet")
-}
-
-func TestService_ForceShutdown(t *testing.T) {
-	t.Errorf("test not implemented yet")
-}
-
-func TestService_Start(t *testing.T) {
-	t.Errorf("test not implemented yet")
-}
-
-func TestService_Stop(t *testing.T) {
-	t.Errorf("test not implemented yet")
-}
-
-func TestService_listenForInterrupt(t *testing.T) {
-	t.Errorf("test not implemented yet")
 }
 
 func ExampleService_Restart() {

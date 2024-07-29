@@ -1,8 +1,9 @@
 # Graceful Go Service (GGService)
 GGService is a Go package designed for building robust and gracefully shutdown services. It provides a framework to easily manage service lifecycle, handle interrupts, and ensure smooth operations even during shutdowns. Ideal for applications requiring reliable service management. Contains graceful shutdowns and custom functions.
 
-ggservice version 1.5.0 <br>
+ggservice version 1.5.1 <br>
 go version 1.22+ <br>
+current test coverage: 63.4% <br>
 [![Go report][go_report_img]][go_report_url]
 
 ## Features
@@ -104,6 +105,7 @@ func forceShutdown() error {
 
 ## Contributors
 Lars M Bek (https://github.com/lmbek)
+Ida Marcher Jensen (https://github.com/notHooman996)
 
 
 ## License

@@ -77,7 +77,10 @@ func TestNew(t *testing.T) {
 }
 
 func TestNewService(t *testing.T) {
-	t.Errorf("test not implemented yet")
+	service := ggservice.NewService("My Service")
+	if service == nil {
+		t.Error("Could not create new service")
+	}
 }
 
 func TestService_ForceShutdown(t *testing.T) {
@@ -89,6 +92,10 @@ func TestService_Start(t *testing.T) {
 }
 
 func TestService_Stop(t *testing.T) {
+	t.Errorf("test not implemented yet")
+}
+
+func TestService_ForceShutdown(t *testing.T) {
 	t.Errorf("test not implemented yet")
 }
 

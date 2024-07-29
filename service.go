@@ -173,11 +173,10 @@ func (s *Service) Restart() error {
 		if s.logLevel >= LOG_LEVEL_INFO {
 			time.Sleep(20 * time.Millisecond) // to prevent log package from race condition logging most of the time
 			log.Println("Calling for restart of service: " + s.Name)
-			err := s.Stop() // ignore stop err
-			if err != nil {
-				log.Println(err)
-			}
-
+		}
+		err := s.Stop() // ignore stop err
+		if err != nil {
+			log.Println(err)
 		}
 
 		for {
@@ -237,7 +236,7 @@ func (s *Service) listenForInterrupt(forceShutdown func() error) {
 	s.isInterrupted = true
 	// printing interrupt signal warning regardless of s.PrintLog
 	if s.logLevel >= LOG_LEVEL_WARN {
-		log.Printf("%s received interrupt signal, initiating graceful shutdown (timeout: %v)\n", s.Name, s.gracefulShutdownTime)
+		log.Printf("%s received interrupt signal, initiating graceful shutdown (timeout: %v)\n", s.Name, s.GetGracefulShutdownTime())
 	}
 
 	signal.Stop(osSignal)
@@ -250,7 +249,7 @@ func (s *Service) listenForInterrupt(forceShutdown func() error) {
 
 	// Schedule a forced shutdown if the graceful shutdown time elapses
 	go func() {
-		<-time.After(s.gracefulShutdownTime)
+		<-time.After(s.GetGracefulShutdownTime())
 
 		// Custom forceShutdown func if provided
 		if forceShutdown != nil {
